@@ -11,7 +11,7 @@ in plain language, so the C# can be written from them. No original code is repro
 | SHA-256 of the copy analysed | `faf7516f509c95788c3078528a806f16049c77b1f5844d195ae3f86ce264cbf0` |
 | Tooling | Ghidra 12.2, scripts in [`tools/ghidra`](../../tools/ghidra) |
 
-Note: the copy analysed has a third-party `.anadius` section added. Game logic is unaffected, but
+Note: the copy analysed has a third-party `.anadius` section added to prevent Insert Disc" prompt. Game logic is unaffected, but
 addresses should be re-checked against an unmodified executable.
 
 ## Locating the handler
