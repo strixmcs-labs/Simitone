@@ -84,7 +84,16 @@ Suppressed SimAntics exceptions now print full stack traces to stderr.
    - Note: a buy-mode report of "clicked the phone, the counter got selected" came from an earlier build and
      was not reproduced after this fix; re-check if it comes back.
 
-(Items 5 and 6 and the diagnostics were uncommitted at the time of writing; check `git status` in both repos.)
+7. **Object patches vs the Legacy Collection** (FreeSO `IffFile.Patch`, `PIFF.ExpectedSourceSize`): in TS1 mode
+   Simitone loads objects only from the game install (FreeSO's `Content/Objects` and `Content/Patch` are TSO-only)
+   and applies the 4 patches in `Content/TS1Patch`. Checked each against the Legacy files: sax player (EP5),
+   open mic (EP6) and picnic basket (EP4) fit exactly and decode cleanly; **pet gym (EP5, BHAV 4100) does not**
+   (patch expects 107 bytes, Legacy has 96) and applying it silently corrupted the routine. Patches whose target
+   chunk isn't the expected size are now skipped with a log line, so the pet gym keeps its original routine.
+   Re-authoring the pet gym performance fix for the Legacy encoding is a possible follow-up.
+   `Content/MeshReplace` (3D meshes for 4 objects, `-3d` mode only) has no Legacy counterpart.
+
+(Everything above is committed as of FreeSO 1e64885b.)
 
 ## Later
 
