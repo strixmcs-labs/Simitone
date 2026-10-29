@@ -548,8 +548,14 @@ namespace Simitone.Client.UI.Panels
             return new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
         }
 
+        private static readonly bool PickDiag = Environment.GetEnvironmentVariable("SIMITONE_PICK_DIAG") == "1";
+        private int PickDiagFrames;
+
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
+            if (PickDiag && ++PickDiagFrames % 60 == 0)
+                Console.WriteLine("LIVE mouseIsOn=" + MouseIsOn + " rmbScroll=" + RMBScroll + " active=" + (ActiveEntity?.ToString() ?? "null")
+                    + " mouse=" + state.MouseState.Position + " region=" + MouseEvt?.Region + " pie=" + (PieMenu != null));
             if (MouseIsOn && !RMBScroll && ActiveEntity != null && !FSOEnvironment.SoftwareKeyboard)
             {
 

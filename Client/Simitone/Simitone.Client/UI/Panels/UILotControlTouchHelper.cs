@@ -26,7 +26,16 @@ namespace Simitone.Client.UI.Panels
         private int MiceDownTimer;
         private Point TapPoint;
         private const int TAP_TIMER = 8; //current time for a tap to register is a third of a second. if
-        private const int TAP_POINT_DIST = 30; //current px distance for a tap to move to become a scroll. TODO: dpi scale?
+        private const int TAP_POINT_DIST = 30; //distance in UI units (scaled by DPIScaleFactor) for a tap to move to become a scroll.
+
+        /// <summary>
+        /// Middle of the screen in back buffer pixels, the same units as mouse and tap positions.
+        /// </summary>
+        private static Point PixelScreenMiddle()
+        {
+            var screen = GameFacade.Screens.CurrentUIScreen;
+            return (new Vector2(screen.ScreenWidth, screen.ScreenHeight) * (FSOEnvironment.DPIScaleFactor / 2)).ToPoint();
+        }
         private List<Vector2> ScrollVelocityHistory = new List<Vector2>();
 
         private int Mode = 0; //-1: none, 0: touch, 1: scroll, 2: zoomscroll, 3: touched
@@ -134,20 +143,22 @@ namespace Simitone.Client.UI.Panels
                             if (transitionTo == -1)
                             {
                                 Mode = -1;
-                                var screenMiddle = new Point(GameFacade.Screens.CurrentUIScreen.ScreenWidth / 2, GameFacade.Screens.CurrentUIScreen.ScreenHeight / 2);
+                                //TapPoint is in back buffer pixels, so the middle has to be too
+                                var screenMiddle = PixelScreenMiddle();
                                 Master.ShowPieMenu(((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle, state);
                             }
                             else
                             {
                                 var mouse = state.MouseStates.FirstOrDefault(x => x.ID == MiceDown.First());
-                                if ((TapPoint - new Point(mouse.MouseState.X, mouse.MouseState.Y)).ToVector2().Length() > TAP_POINT_DIST)
+                                if ((TapPoint - new Point(mouse.MouseState.X, mouse.MouseState.Y)).ToVector2().Length() > TAP_POINT_DIST * FSOEnvironment.DPIScaleFactor)
                                 {
                                     Mode = 1; //become a scroll
                                 }
                                 else if (++MiceDownTimer > TAP_TIMER)
                                 {
                                     Mode = 3;
-                                    var screenMiddle = new Point(GameFacade.Screens.CurrentUIScreen.ScreenWidth / 2, GameFacade.Screens.CurrentUIScreen.ScreenHeight / 2);
+                                    //TapPoint is in back buffer pixels, so the middle has to be too
+                                    var screenMiddle = PixelScreenMiddle();
                                     Master.ShowPieMenu(((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle, state);
                                 }
                             }
