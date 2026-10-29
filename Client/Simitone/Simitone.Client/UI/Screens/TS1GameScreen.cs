@@ -120,7 +120,8 @@ namespace Simitone.Client.UI.Screens
             set
             {
                 _Rotation = value;
-                World.State.CenterTile = World.EstTileAtPosWithScroll(new Vector2(ScreenWidth / 2, ScreenHeight / 2));
+                //screen size is in UI units; world picking takes back buffer pixels
+                World.State.CenterTile = World.EstTileAtPosWithScroll(new Vector2(ScreenWidth / 2, ScreenHeight / 2) * FSOEnvironment.DPIScaleFactor);
                 if (World != null)
                 {
                     switch (_Rotation)

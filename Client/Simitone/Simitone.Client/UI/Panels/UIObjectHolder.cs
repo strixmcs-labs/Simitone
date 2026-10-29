@@ -348,7 +348,10 @@ namespace Simitone.Client.UI.Panels
             if (Holding != null && Roommate)
             {
                 if (MouseClicked) Holding.Clicked = true;
-                var mpos = FSOEnvironment.SoftwareKeyboard ? new Point(UIScreen.Current.ScreenWidth / 2, UIScreen.Current.ScreenHeight / 2) : state.MouseState.Position;
+                //world picking takes back buffer pixels, like the mouse; the touch-mode screen centre is in UI units
+                var mpos = FSOEnvironment.SoftwareKeyboard
+                    ? (new Vector2(UIScreen.Current.ScreenWidth / 2, UIScreen.Current.ScreenHeight / 2) * FSOEnvironment.DPIScaleFactor).ToPoint()
+                    : state.MouseState.Position;
                 if (MouseIsDown && Holding.Clicked)
                 {
                     bool updatePos = MouseClicked;
@@ -404,7 +407,7 @@ namespace Simitone.Client.UI.Panels
                 }
                 else
                 {
-                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(mpos.X, mpos.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
+                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(mpos.X, mpos.Y)) + Holding.TilePosOffset;
                     MoveSelected(tilePos, 1);
                 }
             }
@@ -431,7 +434,7 @@ namespace Simitone.Client.UI.Panels
                         Holding.CanDelete = canDelete;
                         Holding.MoveTarget = newHover;
                         var estBase = state.MouseState.Position; //FSOEnvironment.SoftwareKeyboard ? new Point(UIScreen.Current.ScreenWidth / 2, UIScreen.Current.ScreenHeight / 2) : state.MouseState.Position;
-                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(new Vector2(estBase.X, estBase.Y) / FSOEnvironment.DPIScaleFactor);
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(new Vector2(estBase.X, estBase.Y));
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
                         if (FSOEnvironment.SoftwareKeyboard) MouseIsDown = false;
