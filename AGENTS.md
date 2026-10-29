@@ -97,6 +97,10 @@ Suppressed SimAntics exceptions now print full stack traces to stderr.
 
 ## Later
 
+- **Release `Simitone.app` only after play testing** (user's decision). Plan: zipped arm64 and x64 bundles from
+  `build-app.sh` as a GitHub pre-release on `strixmcs-labs/Simitone`, plus a Download section in the README that
+  explains the Gatekeeper override (the bundle is ad-hoc signed, not notarised). Don't publish before the user asks.
+
 - Test fame promotion in game (Studio Town).
 - Implement remaining Generic Sims Calls from `docs/re/generic-sims-call.md` (38, 27, 16, 13, 15, 39/40, no-ops).
 - Verify RE addresses against an unmodified `sims.exe`; identify `0x00548570` (friend-loop check).
