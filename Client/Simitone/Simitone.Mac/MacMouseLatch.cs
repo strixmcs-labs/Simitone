@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -29,12 +28,8 @@ namespace Simitone.Mac
         /// </summary>
         public static bool Install()
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "runtimes", "osx", "native", "libSDL2-2.0.0.dylib");
-            IntPtr lib;
-            if (!NativeLibrary.TryLoad(path, out lib) && !NativeLibrary.TryLoad("libSDL2-2.0.0.dylib", out lib)) return false;
-
-            IntPtr addWatch;
-            if (!NativeLibrary.TryGetExport(lib, "SDL_AddEventWatch", out addWatch)) return false;
+            var addWatch = MacSdl.Get("SDL_AddEventWatch");
+            if (addWatch == IntPtr.Zero) return false;
 
             var add = (delegate* unmanaged[Cdecl]<delegate* unmanaged[Cdecl]<IntPtr, IntPtr, int>, IntPtr, void>)addWatch;
             add(&OnEvent, IntPtr.Zero);

@@ -35,6 +35,13 @@ namespace Simitone.Client
         public _3DLayer SceneMgr;
         private bool HasUpdated;
 
+        /// <summary>
+        /// Set by a platform launcher when the window's drawable is larger than its size in points (macOS Retina).
+        /// Returns the drawable size in pixels. MonoGame sizes the back buffer in points, so ApplyPixelBackBuffer
+        /// corrects it and sets DPIScaleFactor to keep the UI the same size on screen.
+        /// </summary>
+        public static Func<Point> PixelSizeProvider;
+
         public SimitoneGame() : base()
         {
             GameFacade.Game = this;
@@ -63,9 +70,41 @@ namespace Simitone.Client
 
         }
 
+        /// <summary>
+        /// Makes the back buffer and viewport match the drawable's pixel size when PixelSizeProvider is set.
+        /// UI sizes (GraphicsWidth/Height) stay in points and DPIScaleFactor covers the difference.
+        /// Returns true if it changed anything.
+        /// </summary>
+        public bool ApplyPixelBackBuffer()
+        {
+            if (PixelSizeProvider == null || GraphicsDevice == null) return false;
+            var pixels = PixelSizeProvider();
+            var points = Window.ClientBounds;
+            if (pixels.X <= 0 || pixels.Y <= 0 || points.Width <= 0 || points.Height <= 0) return false;
+
+            var pp = GraphicsDevice.PresentationParameters;
+            if (pp.BackBufferWidth == pixels.X && pp.BackBufferHeight == pixels.Y) return false;
+
+            pp.BackBufferWidth = pixels.X;
+            pp.BackBufferHeight = pixels.Y;
+            GraphicsDevice.Viewport = new Viewport(0, 0, pixels.X, pixels.Y);
+            FSOEnvironment.DPIScaleFactor = pixels.X / (float)points.Width;
+            GlobalSettings.Default.GraphicsWidth = points.Width;
+            GlobalSettings.Default.GraphicsHeight = points.Height;
+
+            if (uiLayer?.CurrentUIScreen != null)
+            {
+                uiLayer.SpriteBatch.ResizeBuffer(pixels.X, pixels.Y);
+                uiLayer.CurrentUIScreen.GameResized();
+            }
+            return true;
+        }
+
         bool newChange = false;
         void Window_ClientSizeChanged(object sender, EventArgs e)
         {
+            //MonoGame has just reset the back buffer to the window's point size
+            if (!newChange && ApplyPixelBackBuffer() && !GlobalSettings.Default.Windowed) return;
             if (newChange || !GlobalSettings.Default.Windowed || FSOEnvironment.SoftwareKeyboard) return;
             if (Window.ClientBounds.Width == 0 || Window.ClientBounds.Height == 0) return;
             newChange = true;
@@ -79,6 +118,8 @@ namespace Simitone.Client
             GlobalSettings.Default.GraphicsHeight = height;
 
             newChange = false;
+            //ApplyChanges set the back buffer back to points; this also resizes the UI if it changes anything
+            if (ApplyPixelBackBuffer()) return;
             if (uiLayer?.CurrentUIScreen == null) return;
 
             uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
@@ -295,6 +336,9 @@ namespace Simitone.Client
                 GameController.EnterLoading();
             }
             GameThread.UpdateExecuting = true;
+
+            //catches back buffer resets that don't raise ClientSizeChanged (fullscreen toggles, moving between displays)
+            ApplyPixelBackBuffer();
 
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
